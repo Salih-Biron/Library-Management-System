@@ -73,7 +73,21 @@ void command_loop(BookNode **head) {
         } else if (strcmp(cmd, "isbn") == 0) {
             // TODO: 解析ISBN，调用search_by_isbn
         } else if (strcmp(cmd, "loan") == 0) {
-            // TODO: 解析loan命令，调用log_loan
+            char isbn[20];
+            int quantity = 0;
+            if (sscanf_s(command, "%19s %19s %d", cmd, 20, isbn, 20, &quantity) == 3) {
+                if (loan_book(*head, isbn, quantity) == 0) {
+                    log_loan(isbn, quantity);
+                    printf("Book loaned successfully.
+");
+                } else {
+                    printf("Error: loan failed for ISBN %s
+", isbn);
+                }
+            } else {
+                printf("Usage: loan <isbn> <quantity>
+");
+            }
         } else if (strcmp(cmd, "return") == 0) {
             char isbn[20];
             int quantity = 1;

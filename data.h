@@ -37,6 +37,16 @@ int add_book(BookNode **head, const char *isbn, const char *title, const char *a
 int delete_book(BookNode **head, const char *isbn);
 
 /**
+ * @brief é€šè¿‡ISBNå€Ÿé˜…å›¾ä¹¦ (å‡å°‘åº“å­˜ï¼Œå¢žåŠ å€Ÿé˜…é‡?)
+ *
+ * @param head é“¾è¡¨å¤´æŒ‡é’ˆ
+ * @param isbn æ ¹æ®ISBNå€Ÿé˜…å›¾ä¹¦
+ * @param quantity å€Ÿé˜…æ•°é‡
+ * @return int 0=æˆåŠŸ, -1=å¤±è´¥
+ */
+int loan_book(BookNode *head, const char *isbn, int quantity);
+
+/**
  * @brief 通过ISBN归还图书 (增加库存，减少借阅量).
  *
  * @param head 链表头指针的指针
@@ -44,7 +54,7 @@ int delete_book(BookNode **head, const char *isbn);
  * @param quantity 归还数量
  * @return int 0=成功, -1=未找到, -2=归还数量无效
  */
-int return_book(BookNode **head, const char *isbn, int quantity);
+int return_book(BookNode *head, const char *isbn, int quantity);
 
 /**
  * @brief 通过ISBN精确查找图书

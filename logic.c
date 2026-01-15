@@ -8,7 +8,7 @@ static void swap_nodes(BookNode **a, BookNode **b) {
     *b = tmp;
 }
 
-// 库存量升序比较：返回值符合快速排序的比较约定。
+// 库存量升序比较：库存量越小越靠前。
 static int compare_stock_asc(const BookNode *a, const BookNode *b) {
     if (a->stock < b->stock) {
         return -1;
@@ -92,12 +92,12 @@ static void relink_from_index(BookNode **head, BookNode **arr, int count) {
 }
 
 void sort_by_stock(BookNode **head) {
-    // 1) 空链表或空指针直接返回。
+    // 空链表或空指针直接返回。
     if (!head || !*head) {
         return;
     }
 
-    // 2) 构建指针索引数组。
+    //构建指针索引数组。
     int count = 0;
     BookNode **arr = build_index(*head, &count);
     if (!arr || count < 2) {
@@ -105,19 +105,19 @@ void sort_by_stock(BookNode **head) {
         return;
     }
 
-    // 3) 按库存量升序排序，并重连链表顺序。
+    // 按库存量升序排序，并重连链表顺序。
     quick_sort(arr, 0, count - 1, compare_stock_asc);
     relink_from_index(head, arr, count);
     free(arr);
 }
 
 void sort_by_loan(BookNode **head) {
-    // 1) 空链表或空指针直接返回。
+    // 空链表或空指针直接返回。
     if (!head || !*head) {
         return;
     }
 
-    // 2) 构建指针索引数组。
+    //构建指针索引数组。
     int count = 0;
     BookNode **arr = build_index(*head, &count);
     if (!arr || count < 2) {
@@ -125,7 +125,7 @@ void sort_by_loan(BookNode **head) {
         return;
     }
 
-    // 3) 按借阅量降序排序，并重连链表顺序。
+    // 按借阅量降序排序，并重连链表顺序。
     quick_sort(arr, 0, count - 1, compare_loan_desc);
     relink_from_index(head, arr, count);
     free(arr);

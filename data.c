@@ -4,12 +4,12 @@
 #include <string.h>
 
 int add_book(BookNode **head, const char *isbn, const char *title, const char *author, int stock) {
-    // 参数检查：头指针、ISBN、书名、作者都必须有效。
+    // 检查指针和必填字段是否有效，避免空指针访问。
     if (!head || !isbn || !title || !author) {
         return -1;
     }
 
-    // 遍历链表查重：若 ISBN 已存在，直接返回失败。
+    // 遍历链表，若 ISBN 已存在则返回失败并提示。
     for (BookNode *cur = *head; cur != NULL; cur = cur->next) {
         if (strcmp(cur->isbn, isbn) == 0) {
             printf("Error: ISBN %s already exists\n", isbn);
@@ -17,13 +17,13 @@ int add_book(BookNode **head, const char *isbn, const char *title, const char *a
         }
     }
 
-    // 分配新节点内存，失败则返回。
+    // 分配新节点，分配失败直接返回。
     BookNode *node = (BookNode *)malloc(sizeof(BookNode));
     if (!node) {
         return -1;
     }
 
-    // 初始化节点字段，借阅量从 0 开始。
+    // 初始化节点字段，借阅量从零开始。
     snprintf(node->isbn, sizeof(node->isbn), "%s", isbn);
     snprintf(node->title, sizeof(node->title), "%s", title);
     snprintf(node->author, sizeof(node->author), "%s", author);
@@ -31,7 +31,7 @@ int add_book(BookNode **head, const char *isbn, const char *title, const char *a
     node->loaned = 0;
     node->next = NULL;
 
-    // 插入到链表尾部，保持录入顺序。
+    // 追加到尾部，保持录入顺序。
     if (*head == NULL) {
         *head = node;
     } else {
@@ -46,12 +46,12 @@ int add_book(BookNode **head, const char *isbn, const char *title, const char *a
 }
 
 int delete_book(BookNode **head, const char *isbn) {
-    // 参数检查：头指针与 ISBN 必须有效。
+    // 检查参数是否有效。
     if (!head || !isbn) {
         return -1;
     }
 
-    // 维护前驱指针，便于断链删除。
+    // 使用前驱指针遍历链表，便于删除时断链。
     BookNode *cur = *head;
     BookNode *prev = NULL;
 
@@ -73,19 +73,42 @@ int delete_book(BookNode **head, const char *isbn) {
     return -1;
 }
 
-int return_book(BookNode *head, const char *isbn, int quantity) {
-    //参数检查：ISBN 不能为空，归还数量必须为正。
+int loan_book(BookNode *head, const char *isbn, int quantity) {
+    // 检查 ISBN 和借阅数量是否有效。
     if (!isbn || quantity <= 0) {
         return -1;
     }
 
-    //定位目标图书节点。
+    // 定位目标图书节点。
     BookNode *target = search_by_isbn(head, isbn);
     if (!target) {
         return -1;
     }
 
-    //  借阅量不足时拒绝归还，避免出现负数。
+    // 库存不足时拒绝借阅，避免库存为负。
+    if (target->stock < quantity) {
+        return -1;
+    }
+
+    // 更新库存与借阅量。
+    target->stock -= quantity;
+    target->loaned += quantity;
+    return 0;
+}
+
+int return_book(BookNode *head, const char *isbn, int quantity) {
+    // 检查 ISBN 和归还数量是否有效。
+    if (!isbn || quantity <= 0) {
+        return -1;
+    }
+
+    // 定位目标图书节点。
+    BookNode *target = search_by_isbn(head, isbn);
+    if (!target) {
+        return -1;
+    }
+
+    // 借阅量不足时拒绝归还，避免出现负数。
     if (target->loaned < quantity) {
         return -1;
     }
@@ -97,12 +120,12 @@ int return_book(BookNode *head, const char *isbn, int quantity) {
 }
 
 BookNode *search_by_isbn(BookNode *head, const char *isbn) {
-    // 参数检查：ISBN 不能为空。
+    // ISBN 不能为空，否则无法匹配。
     if (!isbn) {
         return NULL;
     }
 
-    //  线性遍历并精确匹配 ISBN。
+    // 线性遍历链表，精确匹配 ISBN。
     for (BookNode *cur = head; cur != NULL; cur = cur->next) {
         if (strcmp(cur->isbn, isbn) == 0) {
             return cur;
@@ -113,7 +136,7 @@ BookNode *search_by_isbn(BookNode *head, const char *isbn) {
 }
 
 BookNode *search_by_keyword(BookNode *head, const char *keyword) {
-    //  参数检查：关键字不能为空。
+    // 关键字不能为空。
     if (!keyword) {
         return NULL;
     }
@@ -123,7 +146,7 @@ BookNode *search_by_keyword(BookNode *head, const char *keyword) {
     BookNode *result_tail = NULL;
 
     for (BookNode *cur = head; cur != NULL; cur = cur->next) {
-        //  同时匹配书名或作者字段。
+        // 书名或作者包含关键字即可命中。
         if (strstr(cur->title, keyword) == NULL && strstr(cur->author, keyword) == NULL) {
             continue;
         }
@@ -140,7 +163,7 @@ BookNode *search_by_keyword(BookNode *head, const char *keyword) {
         *node = *cur;
         node->next = NULL;
 
-        //  按顺序追加到结果链表尾部。
+        // 按顺序追加到结果链表尾部。
         if (!result_head) {
             result_head = node;
             result_tail = node;
@@ -154,7 +177,7 @@ BookNode *search_by_keyword(BookNode *head, const char *keyword) {
 }
 
 void destroy_list(BookNode *head) {
-    // 逐个释放节点，直到链表结束。
+    // 逐节点释放内存，直到链表结束。
     BookNode *cur = head;
     while (cur != NULL) {
         BookNode *next = cur->next;
