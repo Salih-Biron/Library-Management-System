@@ -1,0 +1,148 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "created": "1768595187"
+  },
+  "books": [
+    {
+      "isbn": "9787506341911",
+      "title": "活着",
+      "author": "",
+      "stock": 15,
+      "loaned": 238
+    },
+    {
+      "isbn": "9787544253994",
+      "title": "百年孤独",
+      "author": "",
+      "stock": 12,
+      "loaned": 196
+    },
+    {
+      "isbn": "9787536692930",
+      "title": "三体(全集)",
+      "author": "",
+      "stock": 20,
+      "loaned": 312
+    },
+    {
+      "isbn": "9787020002207",
+      "title": "红楼梦",
+      "author": "",
+      "stock": 18,
+      "loaned": 205
+    },
+    {
+      "isbn": "9787532742739",
+      "title": "小王子",
+      "author": "",
+      "stock": 25,
+      "loaned": 289
+    },
+    {
+      "isbn": "9787544270878",
+      "title": "解忧杂货店",
+      "author": "",
+      "stock": 16,
+      "loaned": 245
+    },
+    {
+      "isbn": "9787208061644",
+      "title": "追风筝的人",
+      "author": "",
+      "stock": 14,
+      "loaned": 210
+    },
+    {
+      "isbn": "9787020002597",
+      "title": "西游记",
+      "author": "",
+      "stock": 17,
+      "loaned": 187
+    },
+    {
+      "isbn": "9787544242516",
+      "title": "白夜行",
+      "author": "",
+      "stock": 11,
+      "loaned": 223
+    },
+    {
+      "isbn": "9787020002603",
+      "title": "骆驼祥子",
+      "author": "",
+      "stock": 19,
+      "loaned": 176
+    },
+    {
+      "isbn": "9787020024759",
+      "title": "围城",
+      "author": "",
+      "stock": 13,
+      "loaned": 168
+    },
+    {
+      "isbn": "9787020033425",
+      "title": "哈利·波特与魔法石",
+      "author": "",
+      "stock": 22,
+      "loaned": 298
+    },
+    {
+      "isbn": "9787506332986",
+      "title": "平凡的世界",
+      "author": "",
+      "stock": 10,
+      "loaned": 201
+    },
+    {
+      "isbn": "9787500792734",
+      "title": "昆虫记",
+      "author": "",
+      "stock": 21,
+      "loaned": 159
+    },
+    {
+      "isbn": "9787020002702",
+      "title": "水浒传",
+      "author": "",
+      "stock": 16,
+      "loaned": 182
+    },
+    {
+      "isbn": "9787532749298",
+      "title": "挪威的森林",
+      "author": "",
+      "stock": 9,
+      "loaned": 215
+    },
+    {
+      "isbn": "9787500125094",
+      "title": "傲慢与偏见",
+      "author": "",
+      "stock": 23,
+      "loaned": 173
+    },
+    {
+      "isbn": "9787020009344",
+      "title": "史记精选",
+      "author": "",
+      "stock": 8,
+      "loaned": 96
+    },
+    {
+      "isbn": "9787807407277",
+      "title": "盗墓笔记（全集）",
+      "author": "",
+      "stock": 24,
+      "loaned": 305
+    },
+    {
+      "isbn": "9787020002863",
+      "title": "茶馆",
+      "author": "",
+      "stock": 15,
+      "loaned": 147
+    }
+  ]
+}
