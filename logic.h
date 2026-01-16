@@ -4,7 +4,7 @@
 #include "data.h"
 
 /**
- * @brief 按库存量升序排序（使用快速排序）
+ * @brief 按库存量升序排序（快速排序）
  *
  * @param head 链表头指针的指针
  */
