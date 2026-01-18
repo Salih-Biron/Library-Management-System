@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <conio.h>
+#endif
 
 int get_terminal_width(void) {
 #ifdef _WIN32

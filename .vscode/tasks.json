@@ -1,0 +1,35 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: gcc.exe 生成活动文件",
+            "command": "C:\\msy64\\mingw64\\bin\\gcc.exe",
+            "args": [
+            "-fdiagnostics-color=always",
+            "-g",
+            "${workspaceFolder}\\main.c",
+            "${workspaceFolder}\\data.c",
+            "${workspaceFolder}\\logic.c",
+            "${workspaceFolder}\\store.c",
+            "${workspaceFolder}\\user.c",
+            "${workspaceFolder}\\terminal.c",
+            "-o",
+            "${workspaceFolder}\\main.exe",
+            "-I${workspaceFolder}",
+            "-luser32"
+            ],
+            "options": {
+                "cwd": "${fileDirname}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "调试器生成的任务。"
+        }
+    ],
+    "version": "2.0.0"
+}
