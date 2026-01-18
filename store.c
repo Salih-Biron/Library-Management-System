@@ -464,7 +464,7 @@ static void skip_json_value(const char **p) {
  * 功能：追加一个加载的图书节点到链表尾部。
  */
 static int append_loaded_book(BookNode **head, BookNode **tail, const char *isbn,
-                              const char *title, const char *author, int stock, int loaned) {
+                               const char *title, const char *author, const char *category, int stock, int loaned) {
     if (!isbn || !title) {
         return -1;
     }
@@ -477,6 +477,7 @@ static int append_loaded_book(BookNode **head, BookNode **tail, const char *isbn
     snprintf(node->isbn, sizeof(node->isbn), "%s", isbn);
     snprintf(node->title, sizeof(node->title), "%s", title);
     snprintf(node->author, sizeof(node->author), "%s", author ? author : "");
+    snprintf(node->category, sizeof(node->category), "%s", category ? category : "未分类");
     node->stock = stock;
     node->loaned = loaned;
     node->next = NULL;
@@ -544,6 +545,8 @@ int persist_books_json(const char *filename, BookNode *head) {
         write_json_string(fp, cur->title);
         fprintf(fp, ",\n      \"author\": ");
         write_json_string(fp, cur->author);
+        fprintf(fp, ",\n      \"category\": ");
+        write_json_string(fp, cur->category);
         fprintf(fp, ",\n      \"stock\": %d,\n", cur->stock);
         fprintf(fp, "      \"loaned\": %d\n", cur->loaned);
         fprintf(fp, "    }%s\n", cur->next ? "," : "");
@@ -639,6 +642,7 @@ BookNode *load_books_from_json(const char *filename) {
             char *isbn = NULL;
             char *title = NULL;
             char *author = NULL;
+            char *category = NULL;
             int stock = 0;
             int loaned = 0;
 
@@ -668,6 +672,9 @@ BookNode *load_books_from_json(const char *filename) {
                 } else if (strcmp(field, "author") == 0) {
                     free(author);
                     author = parse_json_string(&p);
+                } else if (strcmp(field, "category") == 0) {
+                    free(category);
+                    category = parse_json_string(&p);
                 } else if (strcmp(field, "stock") == 0) {
                     parse_json_int(&p, &stock);
                 } else if (strcmp(field, "loaned") == 0) {
@@ -684,10 +691,11 @@ BookNode *load_books_from_json(const char *filename) {
             }
 
             if (isbn && title) {
-                if (append_loaded_book(&head, &tail, isbn, title, author, stock, loaned) != 0) {
+                if (append_loaded_book(&head, &tail, isbn, title, author, category, stock, loaned) != 0) {
                     free(isbn);
                     free(title);
                     free(author);
+                    free(category);
                     destroy_list(head);
                     head = NULL;
                     tail = NULL;
@@ -698,6 +706,7 @@ BookNode *load_books_from_json(const char *filename) {
             free(isbn);
             free(title);
             free(author);
+            free(category);
         }
 
         free(key);
@@ -706,4 +715,28 @@ BookNode *load_books_from_json(const char *filename) {
 
     free(buffer);
     return head;
+}
+
+void export_to_csv(const char *filename, BookNode *head) {
+    if (!filename || !head) {
+        return;
+    }
+
+    FILE *fp = fopen(filename, "w");
+    if (!fp) {
+        return;
+    }
+
+    fprintf(fp, "ISBN,标题,作者,分类,库存量,借阅量\n");
+
+    for (BookNode *cur = head; cur != NULL; cur = cur->next) {
+        fprintf(fp, "%s,%s,%s,%s,%d,%d\n",
+                cur->isbn, cur->title, cur->author, cur->category, cur->stock, cur->loaned);
+    }
+
+    fclose(fp);
+}
+
+void export_to_json(const char *filename, BookNode *head) {
+    persist_books_json(filename, head);
 }
