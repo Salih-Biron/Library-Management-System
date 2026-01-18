@@ -4,8 +4,32 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 #define PERSISTENCE_FILE "library_data.json"
+
+/* 获取终端窗口宽度 */
+static int get_terminal_width(void){
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    if (w.ws_col == 0) {
+        char *cols = getenv("COLUMNS");
+        return cols ? atoi(cols) : 80;
+    }
+    return w.ws_col;
+}
+
+/* 获取终端窗口高度 */
+static int get_terminal_height(void){
+    struct winsize w;
+    ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+    if (w.ws_row == 0) {
+        char *lines = getenv("LINES");
+        return lines ? atoi(lines) : 24;
+    }
+    return w.ws_row;
+}
 
 /* ---------- 工具 ---------- */
 static void trim_newline(char *s){
@@ -117,24 +141,94 @@ static void print_help(void) {
 static void color_main_menu(void){
     printf("\033[2J\033[H");
 
+    int term_width = get_terminal_width();
+    int term_height = get_terminal_height();
+
+    if (term_width < 60) term_width = 60;
+    if (term_height < 20) term_height = 20;
+
     printf("\033[38;2;0;206;209m");
-    printf("-----------------------------------------------------------------\n");
-    printf("                  ####      ####      #       #     #    \n");
-    printf("                 #    #    #    #     #     #       #   \n");
-    printf("                 #    #    #    #     #    #        #   \n");
-    printf("                 #    #    #    #     #  #          #   \n");
-    printf("                 #    #    #    #     #    #        #   \n");
-    printf("                 #    #    #    #     #      #      #   \n");
-    printf("                 #    #    #    #     #        #    #   \n");
-    printf("                  ####      ####      #          #  #########\n");
-    printf("                   \033[38;2;0;230;200mOcean of Knowledege Library  (OOKL)\033[38;2;0;206;209m\n");
-    printf("                            \033[38;2;0;230;200mVersion: 1.0.0\033[38;2;0;206;209m\n");
-    printf("-----------------------------------------------------------------\n");
-    printf("-----------------------------------------------------------------\n");
-    printf("|                           [1]进入主程序                        |\n");
-    printf("|                           [2]退出系统                          |\n");
-    printf("-----------------------------------------------------------------\n");
-    printf("  请选择：\033[0m");
+
+    char separator[2048];
+    int sep_len = term_width;
+    if (sep_len > 2047) sep_len = 2047;
+    memset(separator, '-', sep_len);
+    separator[sep_len] = '\0';
+
+    int center_offset = (term_width - 48) / 2;
+    if (center_offset < 2) center_offset = 2;
+
+    printf("%s\n", separator);
+
+    for (int i = 0; i < center_offset; i++) {
+        printf(" ");
+    }
+    printf("####      ####      #       #     #    \n");
+    for (int i = 0; i < center_offset; i++) {
+        printf(" ");
+    }
+    printf("#    #    #    #     #     #       #   \n");
+    for (int i = 0; i < center_offset; i++) {
+        printf(" ");
+    }
+    printf("#    #    #    #     #    #        #   \n");
+    for (int i = 0; i < center_offset; i++) {
+        printf(" ");
+    }
+    printf("#    #    #    #     #  #          #   \n");
+    for (int i = 0; i < center_offset; i++) {
+        printf(" ");
+    }
+    printf("#    #    #    #     #    #        #   \n");
+    for (int i = 0; i < center_offset; i++) {
+        printf(" ");
+    }
+    printf("#    #    #    #     #      #      #   \n");
+    for (int i = 0; i < center_offset; i++) {
+        printf(" ");
+    }
+    printf("#    #    #    #     #        #    #   \n");
+    for (int i = 0; i < center_offset; i++) {
+        printf(" ");
+    }
+    printf(" ####      ####      #          #  #########\n");
+
+    for (int i = 0; i < center_offset; i++) {
+        printf(" ");
+    }
+    printf("\033[38;2;0;230;200mOcean of Knowledege Library  (OOKL)\033[38;2;0;206;209m\n");
+
+    for (int i = 0; i < center_offset + 2; i++) {
+        printf(" ");
+    }
+    printf("\033[38;2;0;230;200mVersion: 1.0.0\033[38;2;0;206;209m\n");
+
+    printf("%s\n", separator);
+    printf("%s\n", separator);
+
+    int menu_center_offset = (term_width - 40) / 2;
+    if (menu_center_offset < 2) menu_center_offset = 2;
+
+    for (int i = 0; i < menu_center_offset; i++) {
+        printf(" ");
+    }
+    printf("[1] 进入主程序\n");
+
+    for (int i = 0; i < menu_center_offset; i++) {
+        printf(" ");
+    }
+    printf("[2] 退出系统\n");
+
+    printf("%s\n", separator);
+
+    int logo_lines = 10;
+    int used_lines = logo_lines + 5;
+    int remaining_height = term_height - used_lines;
+    for (int i = 0; i < remaining_height; i++) {
+        printf("\n");
+    }
+
+    printf("\033[0m");
     fflush(stdout);
 }
 
