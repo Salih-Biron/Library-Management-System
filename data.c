@@ -29,7 +29,7 @@ static BookNode *append_copy_node(BookNode **head, BookNode **tail, const BookNo
  * 说明：会检查 ISBN 是否重复，成功后 loaned 置 0。
  * 返回：0=成功，-1=失败（参数无效或 ISBN 重复或内存分配失败）。
  */
-int add_book(BookNode **head, const char *isbn, const char *title, const char *author, int stock) {
+int add_book(BookNode **head, const char *isbn, const char *title, const char *author, const char *category, int stock) {
     // 检查指针和必填字段是否有效，避免空指针访问。
     if (!head || !isbn || !title || !author) {
         return -1;
@@ -53,6 +53,7 @@ int add_book(BookNode **head, const char *isbn, const char *title, const char *a
     snprintf(node->isbn, sizeof(node->isbn), "%s", isbn);
     snprintf(node->title, sizeof(node->title), "%s", title);
     snprintf(node->author, sizeof(node->author), "%s", author);
+    snprintf(node->category, sizeof(node->category), "%s", category ? category : "未分类");
     node->stock = stock;
     node->loaned = 0;
     node->next = NULL;
@@ -194,8 +195,8 @@ BookNode *search_by_keyword(BookNode *head, const char *keyword) {
     BookNode *result_tail = NULL;
 
     for (BookNode *cur = head; cur != NULL; cur = cur->next) {
-        // 书名或作者包含关键字即可命中。
-        if (strstr(cur->title, keyword) == NULL && strstr(cur->author, keyword) == NULL) {
+        // 书名、作者或分类包含关键字即可命中。
+        if (strstr(cur->title, keyword) == NULL && strstr(cur->author, keyword) == NULL && strstr(cur->category, keyword) == NULL) {
             continue;
         }
 
@@ -280,7 +281,7 @@ BookNode *search_by_author(BookNode *head, const char *author) {
  * 功能：按 ISBN 修改图书信息（书名/作者/库存）。
  * 返回：0=成功，-1=未找到或参数无效。
  */
-int update_book(BookNode *head, const char *isbn, const char *title, const char *author, int stock) {
+int update_book(BookNode *head, const char *isbn, const char *title, const char *author, const char *category, int stock) {
     if (!isbn || !title || !author || stock < 0) {
         return -1;
     }
@@ -292,6 +293,7 @@ int update_book(BookNode *head, const char *isbn, const char *title, const char 
 
     snprintf(target->title, sizeof(target->title), "%s", title);
     snprintf(target->author, sizeof(target->author), "%s", author);
+    snprintf(target->category, sizeof(target->category), "%s", category ? category : "未分类");
     target->stock = stock;
     return 0;
 }

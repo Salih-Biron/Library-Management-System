@@ -10,6 +10,7 @@ typedef struct Book {
     char isbn[20];     // ISBN 编号
     char title[100];   // 书名
     char author[50];   // 作者
+    char category[50]; // 分类
     int stock;         // 库存量
     int loaned;        // 借阅量
     struct Book *next; // 指向下一个节点
@@ -25,7 +26,7 @@ typedef struct Book {
  * @param stock 库存量
  * @return int 0=成功, -1=失败（ISBN 重复/参数无效/内存分配失败）
  */
-int add_book(BookNode **head, const char *isbn, const char *title, const char *author, int stock);
+int add_book(BookNode **head, const char *isbn, const char *title, const char *author, const char *category, int stock);
 
 /**
  * @brief 按 ISBN 删除图书
@@ -102,7 +103,7 @@ BookNode *search_by_author(BookNode *head, const char *author);
  * @param stock 新库存
  * @return int 0=成功, -1=未找到或参数无效
  */
-int update_book(BookNode *head, const char *isbn, const char *title, const char *author, int stock);
+int update_book(BookNode *head, const char *isbn, const char *title, const char *author, const char *category, int stock);
 
 /**
  * @brief 释放链表所有节点内存
