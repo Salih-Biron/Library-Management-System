@@ -68,12 +68,29 @@ void load_loans(BookNode *head);
 int persist_books_json(const char *filename, BookNode *head);
 
 /**
+ * @brief 将图书数据持久化为二进制 DAT 文件（系统内部使用）
+ *
+ * @param filename 输出文件名
+ * @param head 链表头指针
+ * @return int 0=成功, -1=失败
+ */
+int persist_books_dat(const char *filename, BookNode *head);
+
+/**
  * @brief 从 JSON 文件恢复图书信息
  *
  * @param filename 输入文件名
  * @return BookNode* 恢复后的链表头指针（NULL 表示失败）
  */
 BookNode *load_books_from_json(const char *filename);
+
+/**
+ * @brief 从二进制 DAT 文件加载图书数据
+ *
+ * @param filename 输入文件名
+ * @return BookNode* 加载后的链表头指针，失败返回 NULL
+ */
+BookNode *load_books_from_dat(const char *filename);
 
 /**
  * @brief 导出图书数据到 CSV 文件（外部使用）

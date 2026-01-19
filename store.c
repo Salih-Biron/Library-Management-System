@@ -25,6 +25,15 @@ typedef struct LegacyLoanLog {
     time_t timestamp;
 } LegacyLoanLog;
 
+typedef struct BookFileRecord {
+    char isbn[20];
+    char title[100];
+    char author[50];
+    char category[50];
+    int stock;
+    int loaned;
+} BookFileRecord;
+
 /*
  * 功能：将时间戳格式化为可读字符串。
  */
@@ -497,6 +506,68 @@ static int append_loaded_book(BookNode **head, BookNode **tail, const char *isbn
  * 功能：写入 JSON 字符串并进行必要的转义。
  * 说明：确保输出内容可被标准 JSON 解析器正确读取。
  */
+int persist_books_dat(const char *filename, BookNode *head) {
+    if (!filename) {
+        return -1;
+    }
+
+    FILE *fp = fopen(filename, "wb");
+    if (!fp) {
+        return -1;
+    }
+
+    for (BookNode *cur = head; cur != NULL; cur = cur->next) {
+        BookFileRecord record;
+        memset(&record, 0, sizeof(record));
+        snprintf(record.isbn, sizeof(record.isbn), "%s", cur->isbn);
+        snprintf(record.title, sizeof(record.title), "%s", cur->title);
+        snprintf(record.author, sizeof(record.author), "%s", cur->author);
+        snprintf(record.category, sizeof(record.category), "%s", cur->category);
+        record.stock = cur->stock;
+        record.loaned = cur->loaned;
+
+        if (fwrite(&record, sizeof(record), 1, fp) != 1) {
+            fclose(fp);
+            return -1;
+        }
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+BookNode *load_books_from_dat(const char *filename) {
+    if (!filename) {
+        return NULL;
+    }
+
+    FILE *fp = fopen(filename, "rb");
+    if (!fp) {
+        return NULL;
+    }
+
+    BookNode *head = NULL;
+    BookNode *tail = NULL;
+    BookFileRecord record;
+
+    while (fread(&record, sizeof(record), 1, fp) == 1) {
+        record.isbn[sizeof(record.isbn) - 1] = '\0';
+        record.title[sizeof(record.title) - 1] = '\0';
+        record.author[sizeof(record.author) - 1] = '\0';
+        record.category[sizeof(record.category) - 1] = '\0';
+
+        if (append_loaded_book(&head, &tail, record.isbn, record.title,
+                               record.author, record.category, record.stock, record.loaned) != 0) {
+            destroy_list(head);
+            fclose(fp);
+            return NULL;
+        }
+    }
+
+    fclose(fp);
+    return head;
+}
+
 static void write_json_string(FILE *fp, const char *text) {
     fputc('"', fp);
     if (text) {
