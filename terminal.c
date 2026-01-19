@@ -49,7 +49,7 @@ int get_terminal_height(void) {
     HANDLE hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_SCREEN_BUFFER_INFO csbi;
     if (GetConsoleScreenBufferInfo(hStdout, &csbi)) {
-        return csbi.srWindow.Bottom - csbi.srWindow.Top + 1;
+        return csbi.srWindow.Bottom - csbi.srWindow.Top;
     }
     char *lines = getenv("LINES");
     return lines ? atoi(lines) : 24;

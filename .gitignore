@@ -234,3 +234,6 @@ Backup of *.doc*
 
 # Visio autosave temporary files
 *.~vsd*
+
+.vscode
+*.log
