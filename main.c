@@ -443,7 +443,7 @@ static void color_main_menu(void){
            sep_color.r, sep_color.g, sep_color.b, separator);
 
     const char *logo[] = {
-        "####      ####      #       #     #    ",
+        " ####      ####      #       #     #    ",
         "#    #    #    #     #     #       #   ",
         "#    #    #    #     #    #        #   ",
         "#    #    #    #     #  #          #   ",
