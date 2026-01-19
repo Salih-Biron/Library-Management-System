@@ -6,8 +6,46 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
+#include <time.h>
+
+typedef struct {
+    int r, g, b;
+} Color;
+
+/* 渐变色带（绿 → 青 → 蓝 → 紫） */
+static Color gradient_colors[] = {
+    {154, 255, 154},
+    {0,   230, 200},
+    {0,   206, 209},
+    {65,  105, 225},
+    {138, 43,  226}
+};
+
+#define GRADIENT_COUNT (sizeof(gradient_colors)/sizeof(gradient_colors[0]))
+
+/* 全局颜色时间 */
+static double g_color_time = 0.0;
+
+/* 根据时间获取颜色（线性插值） */
+static Color get_dynamic_color(double t) {
+    int i0 = (int)t % GRADIENT_COUNT;
+    int i1 = (i0 + 1) % GRADIENT_COUNT;
+
+    double local_t = t - (int)t;
+
+    Color c0 = gradient_colors[i0];
+    Color c1 = gradient_colors[i1];
+
+    Color out;
+    out.r = c0.r + (int)((c1.r - c0.r) * local_t);
+    out.g = c0.g + (int)((c1.g - c0.g) * local_t);
+    out.b = c0.b + (int)((c1.b - c0.b) * local_t);
+    return out;
+}
 
 #define PERSISTENCE_FILE "library_data.json"
+
 
 /* ---------- 工具 ---------- */
 static void trim_newline(char *s){
@@ -104,7 +142,7 @@ static void print_help(void) {
 
 /* ---------- 注册界面 ---------- */
 static void register_screen(UserNode **users){
-    clear_screen();
+    printf("\033[2J\033[H");
     
     int term_width = get_terminal_width();
     if (term_width < 80) term_width = 80;
@@ -134,13 +172,13 @@ static void register_screen(UserNode **users){
  
     if (strlen(account) == 0) {
         printf("\033[38;2;255;0;0m账号不能为空！\n\033[0m");
-        msleep(2);
+        msleep(2000);
         return;
     }
  
     if (account_exists(*users, account)) {
         printf("\033[38;2;255;0;0m账号已存在！\n\033[0m");
-        msleep(2);
+        msleep(2000);
         return;
     }
  
@@ -152,7 +190,7 @@ static void register_screen(UserNode **users){
  
     if (strcmp(password, password_confirm) != 0) {
         printf("\033[38;2;255;0;0m两次密码不一致！\n\033[0m");
-        msleep(2);
+        msleep(2000);
         return;
     }
   
@@ -162,7 +200,7 @@ static void register_screen(UserNode **users){
   
     if (strlen(question) == 0) {
         printf("\033[38;2;255;0;0m密保问题不能为空！\n\033[0m");
-        msleep(2);
+        msleep(2000);
         return;
     }
   
@@ -172,7 +210,7 @@ static void register_screen(UserNode **users){
   
     if (strlen(answer) == 0) {
         printf("\033[38;2;255;0;0m密保答案不能为空！\n\033[0m");
-        msleep(2);
+        msleep(2000);
         return;
     }
  
@@ -192,23 +230,23 @@ static void register_screen(UserNode **users){
         role = ROLE_ADMIN;
     } else {
         printf("\033[38;2;255;0;0m无效选择！\n\033[0m");
-        msleep(2);
+        msleep(2000);
         return;
     }
- 
+  
     if (register_user(users, role, account, password, question, answer) == 0) {
         printf("\033[38;2;0;255;0m注册成功！\n\033[0m");
         save_users_to_file(NULL, *users);
     } else {
         printf("\033[38;2;255;0;0m注册失败！\n\033[0m");
     }
- 
-    msleep(2);
+  
+    msleep(2000);
 }
 
  /* ---------- 找回密码界面 ---------- */
  static void forgot_password_screen(UserNode *users){
-     clear_screen();
+     printf("\033[2J\033[H");
      
      int term_width = get_terminal_width();
      if (term_width < 80) term_width = 80;
@@ -232,58 +270,58 @@ static void register_screen(UserNode **users){
      if (!fgets(account, sizeof(account), stdin)) return;
      trim_newline(account);
   
-     if (!account_exists(users, account)) {
-         printf("\033[38;2;255;0;0m账号不存在！\n\033[0m");
-         msleep(2);
-         return;
-     }
+      if (!account_exists(users, account)) {
+          printf("\033[38;2;255;0;0m账号不存在！\n\033[0m");
+          msleep(2000);
+          return;
+      }
+   
+      char *question = get_secret_question(users, account);
+      if (!question) {
+          printf("\033[38;2;255;0;0m获取密保问题失败！\n\033[0m");
+          msleep(2000);
+          return;
+      }
+   
+      printf("\033[38;2;255;255;255m您的密保问题是: %s\n\033[0m", question);
+      printf("\033[38;2;255;255;255m请输入密保问题答案: \033[0m");
+      if (!fgets(answer, sizeof(answer), stdin)) return;
+      trim_newline(answer);
+   
+      if (verify_secret(users, account, answer) != 0) {
+          printf("\033[38;2;255;0;0m密保答案错误！\n\033[0m");
+          msleep(2000);
+          return;
+      }
+   
+      char new_password[50];
+      char new_password_confirm[50];
+   
+      printf("\033[38;2;255;255;255m请输入新密码: \033[0m");
+      read_pwd(new_password, sizeof(new_password));
+   
+      printf("\033[38;2;255;255;255m请再次输入新密码: \033[0m");
+      read_pwd(new_password_confirm, sizeof(new_password_confirm));
+   
+      if (strcmp(new_password, new_password_confirm) != 0) {
+          printf("\033[38;2;255;0;0m两次密码不一致！\n\033[0m");
+          msleep(2000);
+          return;
+      }
   
-     char *question = get_secret_question(users, account);
-     if (!question) {
-         printf("\033[38;2;255;0;0m获取密保问题失败！\n\033[0m");
-         msleep(2);
-         return;
-     }
+      if (change_password(users, account, new_password) == 0) {
+          printf("\033[38;2;0;255;0m密码修改成功！\n\033[0m");
+          save_users_to_file(NULL, users);
+      } else {
+          printf("\033[38;2;255;0;0m密码修改失败！\n\033[0m");
+      }
   
-     printf("\033[38;2;255;255;255m您的密保问题是: %s\n\033[0m", question);
-     printf("\033[38;2;255;255;255m请输入密保问题答案: \033[0m");
-     if (!fgets(answer, sizeof(answer), stdin)) return;
-     trim_newline(answer);
-  
-     if (verify_secret(users, account, answer) != 0) {
-         printf("\033[38;2;255;0;0m密保答案错误！\n\033[0m");
-         msleep(2);
-         return;
-     }
-  
-     char new_password[50];
-     char new_password_confirm[50];
-  
-     printf("\033[38;2;255;255;255m请输入新密码: \033[0m");
-     read_pwd(new_password, sizeof(new_password));
-  
-     printf("\033[38;2;255;255;255m请再次输入新密码: \033[0m");
-     read_pwd(new_password_confirm, sizeof(new_password_confirm));
-  
-     if (strcmp(new_password, new_password_confirm) != 0) {
-         printf("\033[38;2;255;0;0m两次密码不一致！\n\033[0m");
-         msleep(2);
-         return;
-     }
- 
-     if (change_password(users, account, new_password) == 0) {
-         printf("\033[38;2;0;255;0m密码修改成功！\n\033[0m");
-         save_users_to_file(NULL, users);
-     } else {
-         printf("\033[38;2;255;0;0m密码修改失败！\n\033[0m");
-     }
- 
-     msleep(2);
- }
+      msleep(2000);
+  }
 
  /* ---------- 登录界面 ---------- */
  static UserRole login_screen(UserNode *users){
-     clear_screen();
+     printf("\033[2J\033[H");
      
      int term_width = get_terminal_width();
      if (term_width < 80) term_width = 80;
@@ -330,7 +368,7 @@ static void register_screen(UserNode **users){
     }
     
     if (strcmp(choice, "1") == 0) {
-        clear_screen();
+        printf("\033[2J\033[H");
         
         printf("\n");
         printf("%*s\033[38;2;154;205;50m", 0, "");
@@ -352,7 +390,7 @@ static void register_screen(UserNode **users){
         
         if (strlen(account) == 0) {
             printf("\033[38;2;255;0;0m账号不能为空！\n\033[0m");
-            msleep(2);
+            msleep(2000);
             return ROLE_NONE;
         }
         
@@ -362,23 +400,23 @@ static void register_screen(UserNode **users){
         UserRole role;
         if (verify_login(users, account, password, &role) == 0) {
             printf("\033[38;2;0;255;0m登录成功！\n\033[0m");
-            msleep(1);
+            msleep(1000);
             return role;
         } else {
             printf("\033[38;2;255;0;0m账号或密码错误！\n\033[0m");
-            msleep(2);
+            msleep(2000);
             return ROLE_NONE;
         }
     }
     
     printf("\033[38;2;255;0;0m无效选择！\n\033[0m");
-    msleep(2);
+    msleep(2000);
     return ROLE_NONE;
  }
 
 /* ---------- 彩色主界面 ---------- */
 static void color_main_menu(void){
-    clear_screen();
+    printf("\033[2J\033[H");
 
     int term_width = get_terminal_width();
     int term_height = get_terminal_height();
@@ -386,7 +424,8 @@ static void color_main_menu(void){
     if (term_width < 60) term_width = 60;
     if (term_height < 20) term_height = 20;
 
-    printf("\033[38;2;0;206;209m");
+    /* 推进颜色时间（控制速度） */
+    g_color_time += 0.08;
 
     char separator[2048];
     int sep_len = term_width;
@@ -397,83 +436,65 @@ static void color_main_menu(void){
     int center_offset = (term_width - 48) / 2;
     if (center_offset < 2) center_offset = 2;
 
-    printf("%s\n", separator);
+    /* 分隔线颜色 */
+    Color sep_color = get_dynamic_color(g_color_time);
+    printf("\033[38;2;%d;%d;%dm%s\n",
+           sep_color.r, sep_color.g, sep_color.b, separator);
 
-    for (int i = 0; i < center_offset; i++) {
-        printf(" ");
-    }
-    printf("####      ####      #       #     #    \n");
-    for (int i = 0; i < center_offset; i++) {
-        printf(" ");
-    }
-    printf("#    #    #    #     #     #       #   \n");
-    for (int i = 0; i < center_offset; i++) {
-        printf(" ");
-    }
-    printf("#    #    #    #     #    #        #   \n");
-    for (int i = 0; i < center_offset; i++) {
-        printf(" ");
-    }
-    printf("#    #    #    #     #  #          #   \n");
-    for (int i = 0; i < center_offset; i++) {
-        printf(" ");
-    }
-    printf("#    #    #    #     #    #        #   \n");
-    for (int i = 0; i < center_offset; i++) {
-        printf(" ");
-    }
-    printf("#    #    #    #     #      #      #   \n");
-    for (int i = 0; i < center_offset; i++) {
-        printf(" ");
-    }
-    printf("#    #    #    #     #        #    #   \n");
-    for (int i = 0; i < center_offset; i++) {
-        printf(" ");
-    }
-    printf(" ####      ####      #          #  #########\n");
+    const char *logo[] = {
+        "####      ####      #       #     #    ",
+        "#    #    #    #     #     #       #   ",
+        "#    #    #    #     #    #        #   ",
+        "#    #    #    #     #  #          #   ",
+        "#    #    #    #     #    #        #   ",
+        "#    #    #    #     #      #      #   ",
+        "#    #    #    #     #        #    #   ",
+        " ####      ####      #          #  #########"
+    };
 
-    for (int i = 0; i < center_offset; i++) {
-        printf(" ");
-    }
-    printf("\033[38;2;0;230;200mOcean of Knowledege Library  (OOKL)\033[38;2;0;206;209m\n");
+    int logo_lines = sizeof(logo) / sizeof(logo[0]);
 
-    
-    for (int i = 0; i < center_offset + 2; i++) {
-        printf(" ");
+    /* LOGO：每一行不同相位 */
+    for (int i = 0; i < logo_lines; i++) {
+        Color c = get_dynamic_color(g_color_time + i * 0.35);
+        for (int s = 0; s < center_offset; s++) printf(" ");
+        printf("\033[38;2;%d;%d;%dm%s\n", c.r, c.g, c.b, logo[i]);
     }
-    printf("\033[38;2;0;230;200mVersion: 1.0.0\033[38;2;0;206;209m\n");
 
-    printf("%s\n", separator);
+    Color title_color = get_dynamic_color(g_color_time + logo_lines * 0.4);
+    for (int i = 0; i < center_offset; i++) printf(" ");
+    printf("\033[38;2;%d;%d;%dmOcean of Knowledege Library  (OOKL)\n",
+           title_color.r, title_color.g, title_color.b);
+
+    for (int i = 0; i < center_offset + 2; i++) printf(" ");
+    printf("\033[38;2;%d;%d;%dmVersion: 1.0.0\n",
+           title_color.r, title_color.g, title_color.b);
+
+    printf("\033[38;2;%d;%d;%dm%s\n", sep_color.r, sep_color.g, sep_color.b, separator);
     printf("%s\n", separator);
 
     int menu_center_offset = (term_width - 40) / 2;
     if (menu_center_offset < 2) menu_center_offset = 2;
 
-    for (int i = 0; i < menu_center_offset; i++) {
-        printf(" ");
-    }
+    for (int i = 0; i < menu_center_offset; i++) printf(" ");
     printf("[1] 进入主程序\n");
 
-    for (int i = 0; i < menu_center_offset; i++) {
-        printf(" ");
-    }
+    for (int i = 0; i < menu_center_offset; i++) printf(" ");
     printf("[2] 退出系统\n");
 
     printf("%s\n", separator);
 
-    int logo_lines = 10;
-    int used_lines = logo_lines + 5;
-    int remaining_height = term_height - used_lines;
-    for (int i = 0; i < remaining_height; i++) {
-        printf("\n");
-    }
+    int used_lines = logo_lines + 8;
+    for (int i = 0; i < term_height - used_lines; i++) printf("\n");
 
     printf("\033[0m");
     fflush(stdout);
 }
 
-/* ---------- 学生命令循环 ---------- */
+ /* ---------- 学生命令循环 ---------- */
 static void student_menu(BookNode **head) {
+    printf("\033[2J\033[H");
+    
     int term_width = get_terminal_width();
     if (term_width < 80) term_width = 80;
     
@@ -593,8 +614,10 @@ static void student_command_loop(BookNode **head) {
     }
 }
 
-/* ---------- 管理员命令循环 ---------- */
+ /* ---------- 管理员命令循环 ---------- */
 static void admin_menu(BookNode **head) {
+    printf("\033[2J\033[H");
+    
     int term_width = get_terminal_width();
     if (term_width < 80) term_width = 80;
     
@@ -826,88 +849,108 @@ void admin_command_loop(BookNode **head) {
 }
 
 /* ---------- main ---------- */
-int main(void){
+int main(void) {
+    init_terminal();
+
     BookNode *book_list = load_books_from_json(PERSISTENCE_FILE);
-    UserNode *user_list = load_users_from_file(NULL);
-
-    char choice[10];
-    while(1){
-        color_main_menu();
-        if(!fgets(choice,sizeof choice,stdin)) break;
-        trim_newline(choice);
-
-        if(strcmp(choice,"1")==0){
-            printf("\033[38;2;255;255;255m\n进入图书管理系统...\n\033[0m");
-               
-            char menu_choice[10];
-            while(1){
-                int term_width = get_terminal_width();
-                if (term_width < 80) term_width = 80;
-                
-                int title_pad = (term_width - 4) / 2;
-                int opt1_pad = (term_width - 10) / 2;
-                int opt2_pad = (term_width - 10) / 2;
-                int opt3_pad = (term_width - 6) / 2;
- 
-                printf("\n");
-                printf("%*s\033[38;2;0;230;200mOcean of Knowledege Library  (OOKL)\033[0m\n", (term_width - 32) / 2, "");
-                printf("%*s\033[38;2;0;230;200mVersion: 1.0.0\033[0m\n\n", (term_width - 13) / 2, "");
-  
-                printf("%*s\033[38;2;154;205;50m", 0, "");
-                for (int i = 0; i < term_width; i++) printf("-");
-                printf("\033[0m\n");
-                
-                printf("%*s\033[38;2;154;205;50m主菜单\033[0m\n", title_pad, "");
-                
-                printf("%*s\033[38;2;154;205;50m", 0, "");
-                for (int i = 0; i < term_width; i++) printf("-");
-                printf("\033[0m\n");
-                
-                printf("%*s\033[38;2;255;165;0m[1]注册账号\033[0m\n", opt1_pad, "");
-                printf("\n");
-                
-                printf("%*s\033[38;2;255;165;0m[2]登陆账号\033[0m\n", opt2_pad, "");
-                printf("\n");
-                
-                printf("%*s\033[38;2;255;165;0m[3]返回\033[0m\n", opt3_pad, "");
-                printf("\n");
-                
-                printf("%*s\033[38;2;154;205;50m", 0, "");
-                for (int i = 0; i < term_width; i++) printf("-");
-                printf("\033[0m\n\n");
-  
-                if(!fgets(menu_choice,sizeof menu_choice,stdin)) break;
-                trim_newline(menu_choice);
-
-                 if(strcmp(menu_choice,"1")==0){
-                     register_screen(&user_list);
-                 }else if(strcmp(menu_choice,"2")==0){
-                     UserRole role = login_screen(user_list);
-                     if(role == ROLE_ADMIN){
-                         printf("\033[38;2;0;255;0m欢迎管理员！\n\033[0m");
-                         admin_command_loop(&book_list);
-                     }else if(role == ROLE_STUDENT){
-                         printf("\033[38;2;0;255;0m欢迎学生！\n\033[0m");
-                         student_command_loop(&book_list);
-                     }else{
-                     }
-                 }else if(strcmp(menu_choice,"3")==0){
-                    break;
-                 }else{
-                     printf("\033[38;2;255;0;0m无效选择，请输入 1、2 或 3。\n\033[0m");
-                 }
-            }
-        }else if(strcmp(choice,"2")==0){
-            printf("\033[38;2;255;255;255m\n感谢使用图书管理系统，再见！\n\033[0m");
-            break;
-        }else{
-            printf("\033[38;2;255;0;0m无效选择，请输入 1 或 2。\n\033[0m");
-        }
+    if (!book_list) {
+        book_list = NULL;
     }
 
-    persist_books_json(PERSISTENCE_FILE, book_list);
-    save_users_to_file(NULL, user_list);
-    destroy_list(book_list);
-    destroy_user_list(user_list);
+    UserNode *user_list = load_users_from_file("users.json");
+    if (!user_list) {
+        user_list = NULL;
+    }
+
+    char choice[10];
+
+    while (1) {
+
+        /* ===== 动画循环 ===== */
+#if ENABLE_ANIMATION
+        while (!platform_kbhit()) {
+            color_main_menu();
+            platform_sleep(50);
+        }
+#else
+        color_main_menu();
+#endif
+
+        if (!fgets(choice, sizeof choice, stdin)) break;
+        trim_newline(choice);
+
+        /* ===== 原有逻辑，一行不动 ===== */
+        if(strcmp(choice,"1")==0){
+        printf("\033[38;2;255;255;255m\n进入图书管理系统...\n\033[0m");
+           
+        char menu_choice[10];
+        while(1){
+            printf("\033[2J\033[H");
+            
+            int term_width = get_terminal_width();
+            if (term_width < 80) term_width = 80;
+            
+            int title_pad = (term_width - 4) / 2;
+            int opt1_pad = (term_width - 10) / 2;
+            int opt2_pad = (term_width - 10) / 2;
+            int opt3_pad = (term_width - 6) / 2;
+
+            printf("\n");
+            printf("%*s\033[38;2;0;230;200mOcean of Knowledege Library  (OOKL)\033[0m\n", (term_width - 32) / 2, "");
+            printf("%*s\033[38;2;0;230;200mVersion: 1.0.0\033[0m\n\n", (term_width - 13) / 2, "");
+
+            printf("%*s\033[38;2;154;205;50m", 0, "");
+            for (int i = 0; i < term_width; i++) printf("-");
+            printf("\033[0m\n");
+
+            printf("%*s\033[38;2;154;205;50m主菜单\033[0m\n", title_pad, "");
+
+            printf("%*s\033[38;2;154;205;50m", 0, "");
+            for (int i = 0; i < term_width; i++) printf("-");
+            printf("\033[0m\n");
+
+            printf("%*s\033[38;2;255;165;0m[1]注册账号\033[0m\n", opt1_pad, "");
+            printf("\n");
+
+            printf("%*s\033[38;2;255;165;0m[2]登陆账号\033[0m\n", opt2_pad, "");
+            printf("\n");
+
+            printf("%*s\033[38;2;255;165;0m[3]返回\033[0m\n", opt3_pad, "");
+            printf("\n");
+
+            printf("%*s\033[38;2;154;205;50m", 0, "");
+            for (int i = 0; i < term_width; i++) printf("-");
+            printf("\033[0m\n\n");
+
+            if(!fgets(menu_choice,sizeof menu_choice,stdin)) break;
+            trim_newline(menu_choice);
+
+            if(strcmp(menu_choice,"1")==0){
+                register_screen(&user_list);
+            }else if(strcmp(menu_choice,"2")==0){
+                UserRole role = login_screen(user_list);
+                if(role == ROLE_ADMIN){
+                    printf("\033[38;2;0;255;0m欢迎管理员！\n\033[0m");
+                    msleep(1500);
+                    admin_command_loop(&book_list);
+                }else if(role == ROLE_STUDENT){
+                    printf("\033[38;2;0;255;0m欢迎学生！\n\033[0m");
+                    msleep(1500);
+                    student_command_loop(&book_list);
+                }
+            }else if(strcmp(menu_choice,"3")==0){
+                break;
+            }else{
+                printf("\033[38;2;255;0;0m无效选择，请输入 1、2 或 3。\n\033[0m");
+                msleep(1500);
+            }
+        }
+    }else if(strcmp(choice,"2")==0){
+        printf("\033[38;2;255;255;255m\n感谢使用图书管理系统，再见！\n\033[0m");
+        break;
+    }else{
+        printf("\033[38;2;255;0;0m无效选择，请输入 1 或 2。\n\033[0m");
+    }
+    }
     return 0;
 }

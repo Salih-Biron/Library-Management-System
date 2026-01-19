@@ -5,12 +5,13 @@
 
 #ifdef _WIN32
 #include <windows.h>
-#define msleep(x) Sleep(x)
+#define ENABLE_ANIMATION 0
 #else
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <termios.h>
-#define msleep(x) usleep((x) * 1000)
+#include <fcntl.h>
+#define ENABLE_ANIMATION 1
 #endif
 
 #ifdef __cplusplus
@@ -22,6 +23,9 @@ int get_terminal_height(void);
 void clear_screen(void);
 void read_pwd(char *buf, size_t sz);
 void init_terminal(void);
+int platform_kbhit(void);
+void platform_sleep(int ms);
+void msleep(int ms);
 
 #ifdef __cplusplus
 }
