@@ -44,8 +44,7 @@ static Color get_dynamic_color(double t) {
     return out;
 }
 
-#define PERSISTENCE_FILE "library_data.dat"
-#define LEGACY_JSON_FILE "library_data.json"
+#define PERSISTENCE_FILE "library_data.json"
 
 
 /* ---------- 工具 ---------- */
@@ -443,7 +442,7 @@ static void color_main_menu(void){
            sep_color.r, sep_color.g, sep_color.b, separator);
 
     const char *logo[] = {
-        "####      ####      #       #     #    ",
+        " ####      ####      #       #     #    ",
         "#    #    #    #     #     #       #   ",
         "#    #    #    #     #    #        #   ",
         "#    #    #    #     #  #          #   ",
@@ -691,9 +690,6 @@ void admin_command_loop(BookNode **head) {
             
             if (add_book(head, isbn, title, author, category, stock) == 0) {
                 log_operation("添加图书", isbn, title);
-                if (persist_books_dat(PERSISTENCE_FILE, *head) != 0) {
-                    printf("\033[38;2;255;0;0mFailed to persist book data.\n\033[0m");
-                }
                 printf("\033[38;2;0;255;0m添加图书成功\n\033[0m");
             } else {
                 printf("\033[38;2;255;0;0m添加图书失败\n\033[0m");
@@ -856,15 +852,12 @@ void admin_command_loop(BookNode **head) {
 int main(void) {
     init_terminal();
 
-    BookNode *book_list = load_books_from_dat(PERSISTENCE_FILE);
+    BookNode *book_list = load_books_from_json(PERSISTENCE_FILE);
     if (!book_list) {
-        book_list = load_books_from_json(LEGACY_JSON_FILE);
-        if (book_list) {
-            persist_books_dat(PERSISTENCE_FILE, book_list);
-        }
+        book_list = NULL;
     }
 
-    UserNode *user_list = load_users_from_file(NULL);
+    UserNode *user_list = load_users_from_file("users.json");
     if (!user_list) {
         user_list = NULL;
     }
