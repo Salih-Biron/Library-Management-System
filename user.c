@@ -15,6 +15,9 @@ static int append_user(UserNode **head, UserNode **tail, UserRole role, const ch
         return -1;
     }
 
+    /* 确保所有字节被初始化，避免将未定义内存写入文件时被 valgrind 报告 */
+    memset(node, 0, sizeof(UserNode));
+
     node->role = role;
     snprintf(node->account, sizeof(node->account), "%s", account);
     snprintf(node->password, sizeof(node->password), "%s", password);
