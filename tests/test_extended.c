@@ -32,6 +32,8 @@ void test_data_edge_cases() {
             if ((p->title && strstr(p->title, "C")) || (p->author && strstr(p->author, "C"))) { found = 1; break; }
         }
         ASSERT(found, "match contains keyword in some node");
+        /* 释放 search_by_keyword 返回的新链表，避免内存泄漏 */
+        destroy_list(res);
     }
 
     destroy_list(head);
